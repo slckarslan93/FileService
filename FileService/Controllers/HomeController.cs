@@ -1,4 +1,6 @@
 ﻿using FileService.Models;
+using FileService.Models.Data.EF;
+using FileService.Models.Entities;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
@@ -7,26 +9,52 @@ namespace FileService.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private string uploadPath = @"uploads\\file\\projectFile";
+        private readonly FileServiceDbContext _dbContext;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, FileServiceDbContext dbContext)
         {
             _logger = logger;
+            _dbContext = dbContext;
         }
 
         public IActionResult Index()
         {
-            return View();
+            var files = _dbContext.FileEntities.OrderByDescending(x => x.Created).ToList();
+            return View(files);
         }
 
-        public IActionResult Privacy()
+        public IActionResult AddFile()
         {
             return View();
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        [HttpPost]
+        public IActionResult AddFile(FileEntity model, IFormFile file)
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            if (file != null)
+            {
+                model.Path = FileService.UploadFormFile(uploadPath, file);
+
+                model.Updated = DateTime.Now;
+                _dbContext.Add(model);
+                _dbContext.SaveChanges();
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public IActionResult DeleteFile(int id)
+        {
+            var file = _dbContext.FileEntities.FirstOrDefault(x => x.Id == id);
+            if (!string.IsNullOrEmpty(file.Path))
+            {
+                FileService.DeleteFile(string.Format("wwwroot/{0}", file.Path));
+            }
+            _dbContext.Remove(file);
+            _dbContext.SaveChanges();
+            return RedirectToAction("Index");
         }
     }
 }

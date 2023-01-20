@@ -1,7 +1,19 @@
+using FileService.Models.Data.EF;
+using Microsoft.EntityFrameworkCore;
+using System.Reflection;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddDbContext<FileServiceDbContext>(x =>
+{
+    x.UseSqlServer(builder.Configuration.GetConnectionString("sqlConnection"), options =>
+    {
+        options.MigrationsAssembly(Assembly.GetAssembly(typeof(FileServiceDbContext)).GetName().Name);
+    });
+});
 
 var app = builder.Build();
 

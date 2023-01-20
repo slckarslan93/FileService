@@ -8,13 +8,11 @@ namespace FileService.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
         private string uploadPath = @"uploads\\file\\projectFile";
         private readonly FileServiceDbContext _dbContext;
 
-        public HomeController(ILogger<HomeController> logger, FileServiceDbContext dbContext)
+        public HomeController(FileServiceDbContext dbContext)
         {
-            _logger = logger;
             _dbContext = dbContext;
         }
 
